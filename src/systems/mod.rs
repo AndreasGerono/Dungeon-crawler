@@ -8,6 +8,7 @@ mod entities_renderer;
 mod map_renders;
 mod player_input;
 mod random_move;
+mod movements;
 
 pub fn build_input_scheduler() -> Schedule {
     Schedule::builder()
@@ -20,6 +21,8 @@ pub fn build_input_scheduler() -> Schedule {
 
 pub fn build_player_scheduler() -> Schedule {
     Schedule::builder()
+        .add_system(movements::movement_system())
+        .flush()
         .add_system(colissions::colissions_system())
         .flush()
         .add_system(map_renders::map_render_system())
@@ -31,6 +34,8 @@ pub fn build_player_scheduler() -> Schedule {
 pub fn build_monsters_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(random_move::random_move_system())
+        .flush()
+        .add_system(movements::movement_system())
         .flush()
         .add_system(colissions::colissions_system())
         .add_system(map_renders::map_render_system())
