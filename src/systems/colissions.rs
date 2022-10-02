@@ -13,8 +13,8 @@ pub fn colissions(ecs: &mut SubWorld, commands: &mut CommandBuffer) {
     <&Point>::query()
         .filter(component::<Player>())
         .iter(ecs)
-        .for_each(|point| {
-            player_pos = *point;
+        .for_each(|pos| {
+            player_pos = *pos;
         });
 
     <(Entity, &Point)>::query()
