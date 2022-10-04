@@ -1,0 +1,32 @@
+#![warn(clippy::all, clippy::pedantic)]
+
+use crate::prelude::*;
+
+#[system]
+#[read_component(Health)]
+#[read_component(Player)]
+pub fn hud(ecs: &SubWorld) {
+    let mut heath_query = <&Health>::query().filter(component::<Player>());
+    let player_health = heath_query.iter(ecs).next().unwrap();
+
+    let mut draw_batch = DrawBatch::new();
+    draw_batch.target(2);
+    draw_batch
+        .print_centered(2, "Explore the Dungeon. Cursor tke keys to move.");
+    draw_batch.bar_horizontal(
+        Point::zero(),
+        SCREEN_WIDTH * 2,
+        player_health.current,
+        player_health.max,
+        ColorPair::new(RED, BLACK),
+    );
+    draw_batch.print_color_centered(
+        1,
+        format!(
+            " Health: {} / {} ",
+            player_health.current, player_health.max
+        ),
+        ColorPair::new(WHITE, RED),
+    );
+    draw_batch.submit(10000).expect("Batch error");
+}

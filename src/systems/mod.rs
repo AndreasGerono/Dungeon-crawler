@@ -5,10 +5,12 @@ use crate::prelude::*;
 mod colissions;
 mod end_turn;
 mod entities_renderer;
+mod hud;
 mod map_renders;
+mod movements;
 mod player_input;
 mod random_move;
-mod movements;
+mod tooltips;
 
 pub fn build_input_scheduler() -> Schedule {
     Schedule::builder()
@@ -16,6 +18,8 @@ pub fn build_input_scheduler() -> Schedule {
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
+        .add_system(tooltips::tooltips_system())
+        .add_system(hud::hud_system())
         .build()
 }
 
@@ -27,6 +31,7 @@ pub fn build_player_scheduler() -> Schedule {
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
+        .add_system(hud::hud_system())
         .add_system(end_turn::end_turn_system())
         .build()
 }
@@ -40,6 +45,7 @@ pub fn build_monsters_scheduler() -> Schedule {
         .add_system(colissions::colissions_system())
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
+        .add_system(hud::hud_system())
         .add_system(end_turn::end_turn_system())
         .build()
 }

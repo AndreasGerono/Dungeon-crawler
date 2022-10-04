@@ -22,3 +22,12 @@ pub struct WantsToMove {
     pub entity: Entity, // Reference to entity in legion that wants to move
     pub destination: Point
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Health {
+    pub current: i32,
+    pub max: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Name(pub String);
