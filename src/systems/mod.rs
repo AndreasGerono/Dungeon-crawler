@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-mod colissions;
+mod combat;
 mod end_turn;
 mod entities_renderer;
 mod hud;
@@ -18,16 +18,16 @@ pub fn build_input_scheduler() -> Schedule {
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
-        .add_system(tooltips::tooltips_system())
         .add_system(hud::hud_system())
+        .add_system(tooltips::tooltips_system())
         .build()
 }
 
 pub fn build_player_scheduler() -> Schedule {
     Schedule::builder()
-        .add_system(movements::movement_system())
+        .add_system(combat::combat_system())
         .flush()
-        .add_system(colissions::colissions_system())
+        .add_system(movements::movement_system())
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
@@ -40,9 +40,10 @@ pub fn build_monsters_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(random_move::random_move_system())
         .flush()
+        .add_system(combat::combat_system())
+        .flush()
         .add_system(movements::movement_system())
         .flush()
-        .add_system(colissions::colissions_system())
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
         .add_system(hud::hud_system())

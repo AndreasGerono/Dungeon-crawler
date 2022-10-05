@@ -4,7 +4,9 @@ use crate::prelude::*;
 
 #[system]
 #[write_component(Point)]
+#[write_component(Health)]
 #[read_component(Player)]
+#[read_component(Enemy)]
 pub fn player_input(
     ecs: &mut SubWorld,
     commands: &mut CommandBuffer,
@@ -20,17 +22,56 @@ pub fn player_input(
             _ => Point::new(0, 0),
         };
 
+        // Why this is better than find_map ??
+        let mut enemies =
+            <(Entity, &Point)>::query().filter(component::<Enemy>());
+
         let mut players =
             <(Entity, &Point)>::query().filter(component::<Player>());
 
-        players.iter_mut(ecs).for_each(|(entity, pos)| {
-            let destination = *pos + delta;
-            commands.push((WantsToMove {
-                entity: *entity,
-                destination,
-            },));
+        // Return first element transform elements and return first
+        let (player_entity, destination) = players
+            .iter(ecs)
+            .map(|(entity, pos)| (*entity, *pos + delta))
+            .next()
+            .unwrap();
 
-            *turn_state = TurnState::PlayerTurn;
-        });
+        let mut did_something = false;
+
+        if delta.x != 0 || delta.y != 0 {
+            let mut hit_something = false;
+            enemies
+                .iter(ecs)
+                .filter(|(_, pos)| **pos == destination)
+                .for_each(|(entity, _)| {
+                    hit_something = true;
+                    did_something = true;
+                    commands.push((WantsToAttack {
+                        attacker: player_entity,
+                        victim: *entity,
+                    },));
+                });
+
+            // Move player if not hit
+            if !hit_something {
+                did_something = true;
+                commands.push((WantsToMove {
+                    entity: player_entity,
+                    destination,
+                },));
+            }
+        }
+
+        if !did_something {
+            if let Ok(mut health) = ecs
+                .entry_mut(player_entity)
+                .unwrap()
+                .get_component_mut::<Health>()
+            {
+                health.current = i32::min(health.max, health.current + 1);
+            }
+        }
+
+        *turn_state = TurnState::PlayerTurn;
     }
 }

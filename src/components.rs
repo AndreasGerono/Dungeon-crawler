@@ -17,10 +17,10 @@ pub struct Enemy;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MovingRandomly;
 
-#[derive(Clone, Copy,Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WantsToMove {
     pub entity: Entity, // Reference to entity in legion that wants to move
-    pub destination: Point
+    pub destination: Point,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -31,3 +31,9 @@ pub struct Health {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Name(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WantsToAttack {
+    pub attacker: Entity,
+    pub victim: Entity,
+}
