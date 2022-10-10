@@ -37,7 +37,7 @@ pub fn spawn_monster(
 
     ecs.push((
         Enemy,
-        MovingRandomly,
+        ChasingPlayer,
         pos,
         Render {
             color: ColorPair::new(WHITE, BLACK),

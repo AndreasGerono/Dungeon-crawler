@@ -18,6 +18,9 @@ pub struct Enemy;
 pub struct MovingRandomly;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ChasingPlayer;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WantsToMove {
     pub entity: Entity, // Reference to entity in legion that wants to move
     pub destination: Point,
