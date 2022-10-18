@@ -7,8 +7,8 @@ pub fn spawn_player(ecs: &mut World, pos: Point) {
         Player, // just a tag component so we can filter for it
         pos,
         Health {
-            current: 10,
-            max: 10,
+            current: 100,
+            max: 100,
         },
         Render {
             color: ColorPair::new(WHITE, BLACK),
@@ -48,5 +48,18 @@ pub fn spawn_monster(
             current: hp,
             max: hp,
         },
+    ));
+}
+
+pub fn spawn_amulet_of_yala(ecs: &mut World, pos: Point) {
+    ecs.push((
+        Item,
+        AmuletOfYala,
+        pos,
+        Render {
+            color: ColorPair::new(WHITE, BLACK),
+            glyph: to_cp437('|'),
+        },
+        Name("Amulet of Yala".to_string()),
     ));
 }
