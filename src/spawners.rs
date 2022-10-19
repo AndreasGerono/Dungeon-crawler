@@ -6,14 +6,15 @@ pub fn spawn_player(ecs: &mut World, pos: Point) {
     ecs.push((
         Player, // just a tag component so we can filter for it
         pos,
-        Health {
-            current: 100,
-            max: 100,
-        },
         Render {
             color: ColorPair::new(WHITE, BLACK),
             glyph: to_cp437('@'),
         },
+        Health {
+            current: 100,
+            max: 100,
+        },
+        FieldOfView::new(8),
     ));
 }
 
@@ -48,6 +49,7 @@ pub fn spawn_monster(
             current: hp,
             max: hp,
         },
+        FieldOfView::new(6),
     ));
 }
 

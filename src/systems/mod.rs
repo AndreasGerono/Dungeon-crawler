@@ -12,10 +12,12 @@ mod player_input;
 mod random_move;
 mod tooltips;
 mod chasing;
+mod fov;
 
 pub fn build_input_scheduler() -> Schedule {
     Schedule::builder()
         .add_system(player_input::player_input_system())
+        .add_system(fov::fov_system())
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
@@ -29,6 +31,7 @@ pub fn build_player_scheduler() -> Schedule {
         .add_system(combat::combat_system())
         .flush()
         .add_system(movements::movement_system())
+        .add_system(fov::fov_system())
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())
@@ -45,6 +48,8 @@ pub fn build_monsters_scheduler() -> Schedule {
         .add_system(combat::combat_system())
         .flush()
         .add_system(movements::movement_system())
+        .flush()
+        .add_system(fov::fov_system())
         .flush()
         .add_system(map_renders::map_render_system())
         .add_system(entities_renderer::render_entities_system())

@@ -6,6 +6,7 @@ use crate::prelude::*;
 #[read_component(Point)]
 #[read_component(Name)]
 #[read_component(Health)]
+#[read_component(FieldOfView)]
 pub fn tooltips(
     ecs: &SubWorld,
     #[resource] mouse_pos: &Point,
@@ -13,25 +14,27 @@ pub fn tooltips(
 ) {
     let mut positions = <(Entity, &Point, &Name)>::query();
     let offset = Point::new(camera.left_x, camera.top_y);
-    let map_pos = *mouse_pos + offset;  // screen pos of entity
+    let map_pos = *mouse_pos + offset; // screen pos of entity
+    let mut fov = <&FieldOfView>::query().filter(component::<Player>());
+    let player_fov = fov.iter(ecs).next().unwrap();
     let mut draw_batch = DrawBatch::new();
     draw_batch.target(2);
     positions
         .iter(ecs)
-        .filter(|(_, pos, _)| **pos == map_pos)
+        .filter(|(_, pos, _)| {
+            (**pos == map_pos) && (player_fov.visable_tiles.contains(pos))
+        })
         .for_each(|(entity, _, name)| {
             let screen_pos = *mouse_pos * 4; // scaling
-            // to access entity health (why not query -> because it can not exist)
             let display = if let Ok(health) =
-            ecs.entry_ref(*entity).unwrap().get_component::<Health>()
+                ecs.entry_ref(*entity).unwrap().get_component::<Health>()
             {
                 format!("{} : {} hp", &name.0, health.current)
             } else {
                 name.0.clone()
             };
-            
-            draw_batch.print(screen_pos, &display);
 
+            draw_batch.print(screen_pos, &display);
         });
-        draw_batch.submit(10100).expect("Batch error");
+    draw_batch.submit(10100).expect("Batch error");
 }
