@@ -7,7 +7,11 @@ use crate::prelude::*;
 #[read_component(FieldOfView)]
 #[read_component(Render)]
 #[read_component(Player)]
-pub fn render_entities(ecs: &SubWorld, #[resource] camera: &Camera) {
+pub fn render_entities(
+    ecs: &SubWorld,
+    #[resource] camera: &Camera,
+    #[resource] map: &Map,
+) {
     let mut renderables = <(&Point, &Render)>::query();
     let mut fov = <&FieldOfView>::query().filter(component::<Player>());
     let player_fov = fov.iter(ecs).next().unwrap();
@@ -17,7 +21,10 @@ pub fn render_entities(ecs: &SubWorld, #[resource] camera: &Camera) {
     // get all entieties with Point and Render components
     renderables
         .iter(ecs)
-        .filter(|(pos, _)| player_fov.visable_tiles.contains(pos))
+        .filter(|(pos, _)| {
+            player_fov.visable_tiles.contains(pos)
+                || map.revealed_tiles[get_idx(pos.x, pos.y)]
+        })
         .for_each(|(pos, render)| {
             draw_batch.set(*pos - offset, render.color, render.glyph);
         });

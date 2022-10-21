@@ -11,6 +11,7 @@ pub fn tooltips(
     ecs: &SubWorld,
     #[resource] mouse_pos: &Point,
     #[resource] camera: &Camera,
+    #[resource] map: &Map,
 ) {
     let mut positions = <(Entity, &Point, &Name)>::query();
     let offset = Point::new(camera.left_x, camera.top_y);
@@ -22,7 +23,9 @@ pub fn tooltips(
     positions
         .iter(ecs)
         .filter(|(_, pos, _)| {
-            (**pos == map_pos) && (player_fov.visable_tiles.contains(pos))
+            (**pos == map_pos)
+                && (player_fov.visable_tiles.contains(pos)
+                    || map.revealed_tiles[get_idx(pos.x, pos.y)])
         })
         .for_each(|(entity, _, name)| {
             let screen_pos = *mouse_pos * 4; // scaling

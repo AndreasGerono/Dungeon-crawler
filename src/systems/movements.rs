@@ -21,11 +21,10 @@ pub fn movement(
     want_move: &WantsToMove,
     ecs: &mut SubWorld,
     commands: &mut CommandBuffer,
-    #[resource] map: &Map,
+    #[resource] map: &mut Map,
     #[resource] camera: &mut Camera,
 ) {
     if map.can_enter_tile(want_move.destination) {
-
         // use commands to update position of a target
         commands.add_component(want_move.entity, want_move.destination);
 
@@ -33,10 +32,13 @@ pub fn movement(
         if let Ok(entry) = ecs.entry_ref(want_move.entity) {
             if let Ok(fov) = entry.get_component::<FieldOfView>() {
                 commands.add_component(want_move.entity, fov.clone_dirty());
-            }
 
-            if entry.get_component::<Player>().is_ok() {
-                camera.on_player_move(want_move.destination);
+                if entry.get_component::<Player>().is_ok() {
+                    camera.on_player_move(want_move.destination);
+                    fov.visable_tiles.iter().for_each(|pos| {
+                        map.revealed_tiles[get_idx(pos.x, pos.y)] = true;
+                    });
+                }
             }
         }
     }
