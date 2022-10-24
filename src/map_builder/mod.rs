@@ -1,12 +1,22 @@
 #![warn(clippy::all, clippy::pedantic)]
 
+mod automata;
+mod empty;
+mod rooms;
+mod drunkard;
+
 use crate::prelude::*;
 
 const MAX_NUM_ROOMS: usize = 25;
 
+trait MapArchitect {
+    fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder;
+}
+
 pub struct MapBuilder {
     pub map: Map,
     pub rooms: Vec<Rect>,
+    pub monster_spawns: Vec<Point>,
     pub player_start: Point,
     pub amulet_start: Point,
 }
@@ -26,8 +36,41 @@ impl Relation for Rect {
 }
 
 impl MapBuilder {
+    pub fn new(rng: &mut RandomNumberGenerator) -> Self {
+        let mut architect: Box<dyn MapArchitect> = match rng.range(0, 3) {
+            0 => Box::new(drunkard::Architect{}),
+            1 => Box::new(automata::Architect{}),
+            _ => Box::new(rooms::Architect{}),
+        };
+
+        architect.build(rng)
+    }
+
     fn fill(&mut self, tile: TileType) {
         self.map.tiles.iter_mut().for_each(|t| *t = tile);
+    }
+
+    fn find_most_distant(&self) -> Point {
+        const UNREACHABLE: &f32 = &f32::MAX;
+
+        let dijkstramap = DijkstraMap::new(
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+            &[self.map.point2d_to_index(self.player_start)],
+            &self.map,
+            1024.0,
+        );
+
+        self.map.index_to_point2d(
+            dijkstramap
+                .map
+                .iter()
+                .enumerate()
+                .filter(|(_, dist)| *dist < UNREACHABLE)
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .unwrap()
+                .0,
+        )
     }
 
     fn build_random_rooms(&mut self, rng: &mut RandomNumberGenerator) {
@@ -101,41 +144,75 @@ impl MapBuilder {
             }
         }
     }
+    fn spawn_monsters(
+        &self,
+        start: Point,
+        rng: &mut RandomNumberGenerator,
+    ) -> Vec<Point> {
 
-    pub fn new(rng: &mut RandomNumberGenerator) -> Self {
-        const UNREACHABLE: &f32 = &f32::MAX;
+        const NUM_MONSTERS: usize = 50;
 
-        let mut mb = MapBuilder {
-            map: Map::new(),
-            rooms: Vec::new(),
-            player_start: Point::zero(),
-            amulet_start: Point::zero(),
-        };
-        mb.fill(TileType::Wall);
-        mb.build_random_rooms(rng);
-        mb.build_corridors(rng);
-        mb.player_start = mb.rooms[0].center();
+        let mut spawnable_tiles: Vec<Point> = self
+            .map
+            .tiles
+            .iter()
+            .enumerate()
+            .filter(|(idx, t)| {
+                **t == TileType::Floor
+                    && DistanceAlg::Pythagoras
+                        .distance2d(start, self.map.index_to_point2d(*idx))
+                        > 10.0
+            })
+            .map(|(idx, _)| self.map.index_to_point2d(idx))
+            .collect();
 
-        let dijkstra_map = DijkstraMap::new(
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
-            &[mb.map.point2d_to_index(mb.player_start)],
-            &mb.map,
-            1024.0,
-        );
+        let mut spawns = Vec::new();
+        for _ in 0..NUM_MONSTERS {
+            let target_index =
+                rng.random_slice_index(&spawnable_tiles).unwrap();
+            spawns.push(spawnable_tiles[target_index]);
+            spawnable_tiles.remove(target_index);
+        }
 
-        // index of most distant and accessible to player room
-        mb.amulet_start = mb.map.index_to_point2d(
-            dijkstra_map
-                .map
-                .iter()
-                .enumerate()
-                .filter(|(_, dist)| *dist < UNREACHABLE)
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .unwrap()
-                .0,
-        );
-
-        mb
+        spawns
     }
+}
+
+pub fn display(title: &str, map: &Map, player_start: Point, amulet_start: Point, monster_spawns: &[Point]) {
+    use colored::Colorize;
+    use std::io::stdin;
+    let mut output = vec!['.'; NUM_TILES];
+
+    map.tiles.iter().enumerate().for_each(|(idx, t)| {
+        match *t {
+            TileType::Floor => output[idx] = '.',
+            TileType::Wall => output[idx] = '#'
+        }
+    });
+
+    output[map.point2d_to_index(player_start)] = '@';
+    output[map.point2d_to_index(amulet_start)] = 'A';
+    for p in monster_spawns.iter() {
+        output[map.point2d_to_index(*p)] = 'M';
+    }
+
+    print!("\x1B[2J"); // CLS!
+    println!("----------------------\n{}\n----------------------", title.bright_yellow());
+    for y in 0..SCREEN_HEIGHT {
+        for x in 0..SCREEN_WIDTH {
+            match output[get_idx(x,y)] {
+                '#' => print!("{}", "#".bright_green()),
+                '@' => print!("{}", "@".bright_yellow()),
+                'M' => print!("{}", "M".bright_red()),
+                'A' => print!("{}", "A".bright_magenta()),
+                _ => print!("{}", ".".truecolor(64, 64, 64))
+            }
+        }
+        println!();
+    }
+
+    let mut ignore_me = String::new();
+    stdin()
+        .read_line(&mut ignore_me)
+        .expect("Failed to read line");
 }

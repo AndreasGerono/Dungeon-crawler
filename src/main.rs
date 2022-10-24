@@ -14,7 +14,6 @@ mod prelude {
     pub use legion::world::SubWorld;
     pub use legion::*;
     pub const SCREEN_WIDTH: i32 = 80;
-    pub const SCREEN_HEIGHT: i32 = 50;
     pub use crate::camera::*;
     pub use crate::components::*;
     pub use crate::map::*;
@@ -22,6 +21,8 @@ mod prelude {
     pub use crate::spawners::*;
     pub use crate::systems::*;
     pub use crate::turn_state::*;
+    pub const SCREEN_HEIGHT: i32 = 50;
+    pub const NUM_TILES: usize = (SCREEN_WIDTH * SCREEN_HEIGHT) as usize;
 }
 
 use prelude::*;
@@ -79,11 +80,19 @@ impl State {
         spawn_amulet_of_yala(&mut ecs, map_builder.amulet_start);
 
         map_builder
-            .rooms
+            .monster_spawns
             .iter()
-            .skip(1)
-            .map(Rect::center)
-            .for_each(|pos| spawn_monster(&mut ecs, &mut rng, pos));
+            .for_each(|pos| spawn_monster(&mut ecs, &mut rng, *pos));
+
+        #[cfg(feature="maptest")]
+        display(
+            "Final Map",
+            &map_builder.map,
+            map_builder.player_start,
+            map_builder.amulet_start,
+            &map_builder.monster_spawns,
+        );
+
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
         resources.insert(TurnState::AwaitingInput);
@@ -106,11 +115,9 @@ impl State {
         spawn_amulet_of_yala(&mut self.ecs, map_builder.amulet_start);
 
         map_builder
-            .rooms
+            .monster_spawns
             .iter()
-            .skip(1)
-            .map(Rect::center)
-            .for_each(|pos| spawn_monster(&mut self.ecs, &mut rng, pos));
+            .for_each(|pos| spawn_monster(&mut self.ecs, &mut rng, *pos));
 
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
@@ -121,7 +128,12 @@ impl State {
         ctx.set_active_console(2);
         ctx.print_color_centered(2, GREEN, BLACK, "You have won!");
         ctx.print_color_centered(4, WHITE, BLACK, "You put on the Amulet of Yala and feel its power course through your veins.");
-        ctx.print_color_centered(5, WHITE, BLACK, "Your town is saved, and you can return to your notmal life.");
+        ctx.print_color_centered(
+            5,
+            WHITE,
+            BLACK,
+            "Your town is saved, and you can return to your notmal life.",
+        );
         ctx.print_color_centered(7, GREEN, BLACK, "Press 1 to play again.");
 
         if let Some(VirtualKeyCode::Key1) = ctx.key {
@@ -134,7 +146,12 @@ impl State {
         ctx.print_color_centered(2, RED, BLACK, "Your quest has ended.");
         ctx.print_color_centered(4, WHITE, BLACK, "Slain by a monster, your hero's journey has come to a premature end.");
         ctx.print_color_centered(5, WHITE, BLACK, "The amulet of yala remains unclaimed, and your home town is not saved.");
-        ctx.print_color_centered(8, YELLOW, BLACK, "Don't worry you can always try again with a new hero.");
+        ctx.print_color_centered(
+            8,
+            YELLOW,
+            BLACK,
+            "Don't worry you can always try again with a new hero.",
+        );
         ctx.print_color_centered(9, GREEN, BLACK, "Press 1 to play again.");
 
         if let Some(VirtualKeyCode::Key1) = ctx.key {

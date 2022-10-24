@@ -30,48 +30,49 @@ pub fn chasing(
         1024.0,
     );
 
-    movers.iter(ecs)
-    .filter(|(_, _, _, fov)| fov.visable_tiles.contains(player_pos))
-    .for_each(|(entity, pos, _, _)| {
-        let idx = get_idx(pos.x, pos.y);
-        if let Some(destination) =
-            DijkstraMap::find_lowest_exit(&dijkstra_map, idx, map)
-        {
-            let distance =
-                DistanceAlg::Pythagoras.distance2d(*pos, *player_pos);
-            // if not near player, go to him
-            let destination = if distance > 1.2 {
-                map.index_to_point2d(destination)
-            } else {
-                *player_pos
-            };
+    movers
+        .iter(ecs)
+        .filter(|(_, _, _, fov)| fov.visable_tiles.contains(player_pos))
+        .for_each(|(entity, pos, _, _)| {
+            let idx = get_idx(pos.x, pos.y);
+            if let Some(destination) =
+                DijkstraMap::find_lowest_exit(&dijkstra_map, idx, map)
+            {
+                let distance =
+                    DistanceAlg::Pythagoras.distance2d(*pos, *player_pos);
+                // if not near player, go to him
+                let destination = if distance > 1.2 {
+                    map.index_to_point2d(destination)
+                } else {
+                    *player_pos
+                };
 
-            let mut hit_something = false;
+                let mut hit_something = false;
 
-            positions
-                .iter(ecs)
-                .filter(|(_, target_pos, _)| **target_pos == destination)
-                .for_each(|(victim, _, _)| {
-                    if ecs
-                        .entry_ref(*victim)
-                        .unwrap()
-                        .get_component::<Player>()
-                        .is_ok()
-                    {
-                        commands.push((WantsToAttack {
-                            attacker: *entity,
-                            victim: *victim,
-                        },));
-                    }
-                    hit_something = true;
-                });
+                positions
+                    .iter(ecs)
+                    .filter(|(_, target_pos, _)| **target_pos == destination)
+                    .for_each(|(victim, _, _)| {
+                        if ecs
+                            .entry_ref(*victim)
+                            .unwrap()
+                            .get_component::<Player>()
+                            .is_ok()
+                        {
+                            commands.push((WantsToAttack {
+                                attacker: *entity,
+                                victim: *victim,
+                            },));
+                        }
+                        hit_something = true;
+                    });
 
-            if !hit_something {
-                commands.push((WantsToMove {
-                    entity: *entity,
-                    destination,
-                },));
+                if !hit_something {
+                    commands.push((WantsToMove {
+                        entity: *entity,
+                        destination,
+                    },));
+                }
             }
-        }
-    });
+        });
 }
