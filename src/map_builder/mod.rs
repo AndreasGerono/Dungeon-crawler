@@ -4,6 +4,7 @@ mod automata;
 mod empty;
 mod rooms;
 mod drunkard;
+mod prefab;
 
 use crate::prelude::*;
 
@@ -43,7 +44,9 @@ impl MapBuilder {
             _ => Box::new(rooms::Architect{}),
         };
 
-        architect.build(rng)
+        let mut mb = architect.build(rng);
+        prefab::apply(&mut mb, rng);
+        mb
     }
 
     fn fill(&mut self, tile: TileType) {
