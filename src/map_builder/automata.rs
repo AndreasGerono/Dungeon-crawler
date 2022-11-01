@@ -77,14 +77,7 @@ impl Architect {
 
 impl MapArchitect for Architect {
     fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder {
-        let mut mb = MapBuilder {
-            map: Map::new(),
-            rooms: Vec::new(),
-            monster_spawns: Vec::new(),
-            player_start: Point::zero(),
-            amulet_start: Point::zero(),
-        };
-
+        let mut mb = MapBuilder::empty();
         Architect::random_noise_map(rng, &mut mb.map);
         for _ in 0..10 {
             Architect::iteration(&mut mb.map);
@@ -93,6 +86,7 @@ impl MapArchitect for Architect {
         mb.monster_spawns = mb.spawn_monsters(start, rng);
         mb.player_start = start;
         mb.amulet_start = mb.find_most_distant();
+        mb.theme = Some(super::themes::Forest::build());
         mb
     }
 }

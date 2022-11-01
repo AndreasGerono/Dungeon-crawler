@@ -5,6 +5,7 @@ mod empty;
 mod rooms;
 mod drunkard;
 mod prefab;
+mod themes;
 
 use crate::prelude::*;
 
@@ -14,8 +15,13 @@ trait MapArchitect {
     fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder;
 }
 
+pub trait MapTheme: Sync + Send {
+    fn tile_render(&self, tile_type: TileType) -> FontCharType;
+}
+
 pub struct MapBuilder {
     pub map: Map,
+    pub theme: Option<Box<dyn MapTheme>>,
     pub rooms: Vec<Rect>,
     pub monster_spawns: Vec<Point>,
     pub player_start: Point,
@@ -37,6 +43,17 @@ impl Relation for Rect {
 }
 
 impl MapBuilder {
+    pub fn empty() -> Self {
+        Self {
+            map: Map::new(),
+            theme: None,
+            rooms: Vec::new(),
+            monster_spawns: Vec::new(),
+            player_start: Point::zero(),
+            amulet_start: Point::zero(),
+        }
+    }
+
     pub fn new(rng: &mut RandomNumberGenerator) -> Self {
         let mut architect: Box<dyn MapArchitect> = match rng.range(0, 3) {
             0 => Box::new(drunkard::Architect{}),

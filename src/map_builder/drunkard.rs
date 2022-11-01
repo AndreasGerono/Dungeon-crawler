@@ -39,14 +39,7 @@ impl Architect {
 
 impl MapArchitect for Architect {
     fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder {
-        let mut mb = MapBuilder {
-            map: Map::new(),
-            rooms: Vec::new(),
-            monster_spawns: Vec::new(),
-            player_start: Point::zero(),
-            amulet_start: Point::zero(),
-        };
-
+        let mut mb = MapBuilder::empty();
         mb.fill(TileType::Wall);
         let center = Point::new(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         Architect::drunkard(center, rng, &mut mb.map);
@@ -87,6 +80,7 @@ impl MapArchitect for Architect {
         mb.monster_spawns = mb.spawn_monsters(center, rng);
         mb.player_start = center;
         mb.amulet_start = mb.find_most_distant();
+        mb.theme = Some(super::themes::Dungeon::build());
 
         mb
     }

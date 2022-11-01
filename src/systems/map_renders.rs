@@ -9,6 +9,7 @@ pub fn map_render(
     ecs: &SubWorld,
     #[resource] map: &Map,
     #[resource] camera: &Camera,
+    #[resource] theme: &Option<Box<dyn MapTheme>>,
 ) {
     let mut fov = <&FieldOfView>::query().filter(component::<Player>());
     let player_fov = fov.iter(ecs).next().unwrap();
@@ -28,10 +29,12 @@ pub fn map_render(
                     DARK_GRAY
                 };
                 let idx = get_idx(x, y);
-                let glyph = match map.tiles[idx] {
-                    TileType::Floor => to_cp437('.'),
-                    TileType::Wall => to_cp437('#'),
+                
+                let glyph = match theme {
+                    Some(theme) => theme.tile_render(map.tiles[idx]),
+                    _ => panic!("theme is not defined!"),
                 };
+
                 draw_batch.set(
                     pt - offset,
                     ColorPair::new(tint, BLACK),
