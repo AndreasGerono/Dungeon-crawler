@@ -48,6 +48,22 @@ pub struct Item;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AmuletOfYala;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ProvidesHealing {
+    pub amount: i32
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ProvidesDungeonMap;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Carried(pub Entity);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ActivateItem {
+    pub used_by: Entity,
+    pub item: Entity,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FieldOfView {
     pub visable_tiles: HashSet<Point>,
